@@ -1,0 +1,74 @@
+version: '3.8'
+
+networks:
+  net_gen:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.1.0/24"
+  net_path1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.2.0/24"
+  net_path2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.3.0/24"
+
+services:
+
+  generator:
+    image: nicolaka/netshoot
+    container_name: generator
+    hostname: generator
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    networks:
+      net_gen:
+        ipv4_address: 10.0.1.10
+    volumes:
+      - ./generator/setup.sh:/setup.sh
+    command: bash /setup.sh
+    tty: true
+    stdin_open: true
+
+  router:
+    image: nicolaka/netshoot
+    container_name: router
+    hostname: router
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    networks:
+      net_gen:
+        ipv4_address: 10.0.1.11
+      net_path1:
+        ipv4_address: 10.0.2.11
+      net_path2:
+        ipv4_address: 10.0.3.11
+    volumes:
+      - ./router/setup.sh:/setup.sh
+    command: bash /setup.sh
+    tty: true
+    stdin_open: true
+
+  receiver:
+    image: nicolaka/netshoot
+    container_name: receiver
+    hostname: receiver
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    networks:
+      net_path1:
+        ipv4_address: 10.0.2.20
+      net_path2:
+        ipv4_address: 10.0.3.20
+    volumes:
+      - ./receiver/setup.sh:/setup.sh
+    command: bash /setup.sh
+    tty: true
+    stdin_open: true
